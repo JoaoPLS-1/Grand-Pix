@@ -18,8 +18,8 @@ export interface HourlyData {
 
 export const mockEvents: DetectionEvent[] = [
   { id: "1", timestamp: "14:32", metal_type: "nao_ferroso", size_mm: 0.8, rejected: true, shift: "tarde", lot: "L024-031" },
-  { id: "2", timestamp: "13:17", metal_type: "ferroso", size_mm: 1.2, rejected: true, shift: "tarde", lot: "L024-031" },
-  { id: "3", timestamp: "11:45", metal_type: "ferroso", size_mm: 0.5, rejected: true, shift: "manha", lot: "L024-030" },
+  { id: "2", timestamp: "13:17", metal_type: "nao_ferroso", size_mm: 1.2, rejected: true, shift: "tarde", lot: "L024-031" },
+  { id: "3", timestamp: "11:45", metal_type: "nao_ferroso", size_mm: 0.5, rejected: true, shift: "manha", lot: "L024-030" },
   { id: "4", timestamp: "10:08", metal_type: "nao_ferroso", size_mm: 0.4, rejected: true, shift: "manha", lot: "L024-030" },
   { id: "5", timestamp: "08:51", metal_type: "ferroso", size_mm: 2.1, rejected: true, shift: "manha", lot: "L024-029" },
 ]

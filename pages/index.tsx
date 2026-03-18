@@ -87,7 +87,7 @@ export default function Dashboard() {
               <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
               <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#ef4444" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #e5e7eb" }} />
-              <Bar yAxisId="left" dataKey="produced" fill="#d1fae5" radius={[4,4,0,0]} name="Produção" />
+              <Bar yAxisId="left" dataKey="produced" fill="#0ccf57" radius={[4,4,0,0]} name="Produção" />
               <Bar yAxisId="right" dataKey="rejected" fill="#ef4444" radius={[4,4,0,0]} name="Rejeições" />
             </BarChart>
           </ResponsiveContainer>
