@@ -107,11 +107,11 @@ export default function Dashboard() {
             </button>
             {!paused && (esteiraAtiva
               ? <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Linha operando
-                </div>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Linha operando
+              </div>
               : <div className="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Linha parada
-                </div>
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Linha parada
+              </div>
             )}
           </div>
         </div>
@@ -138,6 +138,7 @@ export default function Dashboard() {
         </div>
 
         {/* Charts row */}
+        {/* Charts row */}
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center justify-between mb-5">
@@ -150,19 +151,36 @@ export default function Dashboard() {
                 {showFull ? "Resumir" : "Ver 24h"}
               </button>
             </div>
-            <ResponsiveContainer width="100%" height={210}>
-              <BarChart data={hourlyDisplay} barGap={3} barCategoryGap="35%">
-                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#fca5a5" }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #f0f0f0", boxShadow: "0 8px 24px rgba(0,0,0,0.08)", padding: "8px 12px" }}
-                  cursor={{ fill: "rgba(0,0,0,0.02)" }}
-                />
-                <Bar yAxisId="left" dataKey="produced" fill="#16c784" radius={[5,5,0,0]} name="Produção" />
-                <Bar yAxisId="right" dataKey="rejected" fill="#ef4444" radius={[5,5,0,0]} name="Rejeições" />
-              </BarChart>
-            </ResponsiveContainer>
+
+            {/* Scroll horizontal apenas no modo 24h */}
+            <div className={showFull ? "overflow-x-auto" : ""}>
+              <div style={{ minWidth: showFull ? "900px" : "100%", width: "100%" }}>
+                <ResponsiveContainer width="100%" height={210}>
+                  <BarChart
+                    data={hourlyDisplay}
+                    barGap={2}
+                    barCategoryGap={showFull ? "20%" : "35%"}
+                    margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
+                    <XAxis
+                      dataKey="hour"
+                      tick={{ fontSize: showFull ? 10 : 11, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                    />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#fca5a5" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #f0f0f0", boxShadow: "0 8px 24px rgba(0,0,0,0.08)", padding: "8px 12px" }}
+                      cursor={{ fill: "rgba(0,0,0,0.02)" }}
+                    />
+                    <Bar yAxisId="left" dataKey="produced" fill="#16c784" radius={[5, 5, 0, 0]} name="Produção" />
+                    <Bar yAxisId="right" dataKey="rejected" fill="#ef4444" radius={[5, 5, 0, 0]} name="Rejeições" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
             <div className="flex gap-4 mt-3 justify-end">
               <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-sm bg-[#16c784]" />Produção</span>
               <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-sm bg-red-400" />Rejeições</span>

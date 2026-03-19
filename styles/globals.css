@@ -1,13 +1,8 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
-
 :root {
   --background: #f5f6fa;
   --foreground: #0f1117;
-  --sidebar-bg: #0f1117;
-  --sidebar-border: rgba(255,255,255,0.06);
-  --green: #16c784;
 }
 
 body {
