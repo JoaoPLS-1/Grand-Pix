@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next"
-import { supabase } from "@/lib/supabase"
-import { mockEvents } from "@/lib/mock-data"
+import { supabase } from "../../lib/supabase"
+import { mockEvents } from "../../lib/mock-data"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { data, error } = await supabase

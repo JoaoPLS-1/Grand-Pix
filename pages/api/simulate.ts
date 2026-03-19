@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next"
-import { supabase } from "@/lib/supabase"
-import { mockEvents } from "@/lib/mock-data"
-import type { DetectionEvent } from "@/lib/mock-data"
+import { supabase } from "../../lib/supabase"
+import { mockEvents } from "../../lib/mock-data"
+import type { DetectionEvent } from "../../lib/mock-data"
 
 export let producaoHoje = {
   totalProduzido: 0,

@@ -1,4 +1,4 @@
-import { DetectionEvent } from "@/lib/mock-data"
+import { DetectionEvent } from "../lib/mock-data"
 
 export default function RejectionList({ events }: { events: DetectionEvent[] }) {
   if (events.length === 0) return (
