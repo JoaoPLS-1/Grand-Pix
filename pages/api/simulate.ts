@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next"
-import { supabase } from "../lib/supabase"
-import { mockEvents } from "../lib/mock-data"
+import { supabase } from "@/lib/supabase"
+import { mockEvents } from "@/lib/mock-data"
+import type { DetectionEvent } from "@/lib/mock-data"
 
 export let producaoHoje = {
   totalProduzido: 0,
@@ -58,13 +59,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!contaminado) continue
 
     const rejeitado = pistaoAtivo
+    const shiftTyped: "manha" | "tarde" | "noite" = shift
 
     const evento = {
       timestamp: hora,
       metal_type: tipos[Math.floor(Math.random() * tipos.length)],
       size_mm: tamanhos[Math.floor(Math.random() * tamanhos.length)],
       rejected: rejeitado,
-      shift,
+      shift: shiftTyped,
       lot: lotes[Math.floor(Math.random() * lotes.length)],
     }
 
@@ -99,7 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           console.log(`[LAB] Amostra enviada — total rejeições: ${totalRejeicoesAgora}`)
         }
       } else {
-        const fallback = { id: Date.now().toString(), ...evento }
+        const fallback = { id: Date.now().toString(), ...evento } as DetectionEvent
         mockEvents.unshift(fallback)
         resultados.push(fallback)
       }
@@ -114,7 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (data) resultados.push(data)
       else {
-        const fallback = { id: Date.now().toString(), ...evento }
+        const fallback: DetectionEvent = { id: Date.now().toString(), ...evento }
         mockEvents.unshift(fallback)
         resultados.push(fallback)
       }

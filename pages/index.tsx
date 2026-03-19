@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import MetricCard from "../pages/components/MetricCard"
-import RejectionList from "../pages/components/RejectionList"
-import EquipamentoCard from "../pages/components/EquipamentoCard"
-import { DetectionEvent } from "../pages/lib/mock-data"
-import { gerarAlertas } from "../pages/lib/alerts"
+import MetricCard from "@/components/MetricCard"
+import RejectionList from "@/components/RejectionList"
+import EquipamentoCard from "@/components/EquipamentoCard"
+import { DetectionEvent } from "@/lib/mock-data"
+import { gerarAlertas } from "@/lib/alerts"
 
 interface Stats {
   totalProduced: number
