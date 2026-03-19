@@ -6,11 +6,10 @@ import EquipamentoCard from "../pages/components/EquipamentoCard"
 import { DetectionEvent } from "../pages/lib/mock-data"
 import { gerarAlertas } from "../pages/lib/alerts"
 
-// Atualiza a interface Stats
 interface Stats {
   totalProduced: number
   totalRejected: number
-  contaminadosPassaram: number  // ← novo
+  contaminadosPassaram: number
   rejectionRate: string
   lastEvent: DetectionEvent
   hourly: { hour: string; produced: number; rejected: number }[]
@@ -54,19 +53,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(() => {
-      if (!pausedRef.current) fetchData()
-    }, POLL_INTERVAL)
+    const interval = setInterval(() => { if (!pausedRef.current) fetchData() }, POLL_INTERVAL)
     return () => clearInterval(interval)
   }, [])
 
   async function simular() {
     setSimulating(true)
-    await fetch("/api/simulate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quantidade: 21, contaminationRate: 0.05, pistaoAtivo: true }),
-    })
+    await fetch("/api/simulate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ quantidade: 21, pistaoAtivo: true }) })
     await fetchData()
     setSimulating(false)
   }
@@ -78,205 +71,250 @@ export default function Dashboard() {
 
   const hayFalha = equipamentos.some(e => e.status === "falha")
 
-  if (!stats) return <div className="flex items-center justify-center h-screen text-black font-bold text-sm">Carregando...</div>
+  if (!stats) return (
+    <div className="flex items-center justify-center h-screen bg-[#f5f6fa]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-[#16c784] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-400">Carregando sistema...</p>
+      </div>
+    </div>
+  )
 
   const alertas = gerarAlertas(events)
   const pieData = [{ name: "Ferroso", value: stats.ferroso }, { name: "Não ferroso", value: stats.naoFerroso }]
-  const hourlyDisplay = showFull
-    ? stats.hourly
-    : stats.hourly.filter(h => h.produced > 0 || h.rejected > 0).slice(-8)
+  const hourlyDisplay = showFull ? stats.hourly : stats.hourly.filter(h => h.produced > 0 || h.rejected > 0).slice(-8)
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-base font-medium text-gray-900">Dashboard principal</h1>
-          <p className="text-xs text-black font-bold mt-0.5">Atualização automática a cada 5s {paused ? "· pausado" : ""}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {hayFalha && (
-            <span className="text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-full flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Equipamento em falha
-            </span>
-          )}
-          <button onClick={() => setPaused(p => !p)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors
-              ${paused ? "border-amber-300 text-amber-700 bg-amber-50" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
-            {paused ? "▶ Retomar" : "⏸ Pausar"}
-          </button>
-          {!paused && <span className="flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
-            {esteiraAtiva ? (
-              <span className="flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Linha operando
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Linha parada
-              </span>
+    <div className="min-h-screen bg-[#f5f6fa]">
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-100 px-8 py-5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Dashboard</h1>
+            <p className="text-xs text-gray-400 mt-0.5">Monitoramento em tempo real · atualiza a cada 5s {paused ? "· pausado" : ""}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {hayFalha && (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                Equipamento em falha
+              </div>
             )}
-          </span>}
-        </div>
-      </div>
-
-      {/* Metric Cards */}
-      <div className="grid grid-cols-5 gap-3 mb-4">
-        <MetricCard label="Produção hoje" value={stats.totalProduced.toLocaleString("pt-BR")} sub="unidades" variant="ok" />
-        <MetricCard label="Rejeições" value={stats.totalRejected} sub="produtos rejeitados" variant="danger" />
-        <MetricCard label="Taxa de rejeição" value={`${stats.rejectionRate}%`} sub="limite ANVISA: 0%" variant="warn" />
-        <MetricCard
-          label="Contaminados passaram"
-          value={stats.contaminadosPassaram}
-          sub="risco à saúde"
-          variant={stats.contaminadosPassaram > 0 ? "danger" : "default"} />
-        <MetricCard label="Última rejeição" value={stats.lastEvent?.timestamp ?? "--"} sub={`${stats.lastEvent?.metal_type === "ferroso" ? "Ferroso" : "Não ferroso"} · ${stats.lastEvent?.size_mm}mm`} />
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="col-span-2 border border-gray-100 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold text-black uppercase tracking-wide">
-              Produção x Rejeições — {showFull ? "24h" : "Últimas 8h"}
-            </p>
-            <button onClick={() => setShowFull(f => !f)}
-              className="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded-md hover:bg-gray-200 transition-colors">
-              {showFull ? "Resumir" : "Expandir 24h"}
+            <button onClick={() => setPaused(p => !p)}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all
+                ${paused ? "border-amber-200 text-amber-700 bg-amber-50" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+              {paused ? "▶ Retomar" : "⏸ Pausar"}
             </button>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={hourlyDisplay} barGap={4}>
-              <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#ef4444" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #e5e7eb" }} />
-              <Bar yAxisId="left" dataKey="produced" fill="#0ccf57" radius={[4, 4, 0, 0]} name="Produção" />
-              <Bar yAxisId="right" dataKey="rejected" fill="#ef4444" radius={[4, 4, 0, 0]} name="Rejeições" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="border border-gray-100 rounded-xl p-4">
-          <p className="text-xs font-bold text-black uppercase tracking-wide mb-3">Últimas rejeições</p>
-          <RejectionList events={events} />
-        </div>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="border border-gray-100 rounded-xl p-4">
-          <p className="text-xs font-bold text-black uppercase tracking-wide mb-3">Por turno</p>
-          {Object.entries(stats.shifts).map(([shift, count]) => {
-            const max = Math.max(...Object.values(stats.shifts))
-            const pct = max > 0 ? (count / max) * 100 : 0
-            const colors: Record<string, string> = { manha: "bg-emerald-400", tarde: "bg-amber-400", noite: "bg-blue-400" }
-            const labels: Record<string, string> = { manha: "Manhã", tarde: "Tarde", noite: "Noite" }
-            return (
-              <div key={shift} className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-black font-bold w-10">{labels[shift]}</span>
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${colors[shift]}`} style={{ width: `${pct}%` }} />
+            {!paused && (esteiraAtiva
+              ? <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Linha operando
                 </div>
-                <span className="text-xs font-medium text-gray-700 w-4">{count}</span>
-              </div>
-            )
-          })}
-          <p className="text-xs font-bold text-black uppercase tracking-wide mt-4 mb-3">Tipo de metal</p>
-          <div className="flex justify-center">
-            <PieChart width={120} height={100}>
-              <Pie data={pieData} cx={60} cy={50} innerRadius={30} outerRadius={45} dataKey="value" strokeWidth={0}>
-                <Cell fill="#ef4444" /><Cell fill="#f59e0b" />
-              </Pie>
-              <Tooltip
-                formatter={(value: any, name: any) => {
-                  const numeric = Number(value ?? 0)
-                  return [`${numeric.toLocaleString("pt-BR")} unidades`, String(name ?? "")]
-                }}
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #e5e7eb", backgroundColor: "#fff" }}
-              />
-            </PieChart>
-          </div>
-          <div className="flex gap-3 justify-center mt-1">
-            <span className="flex items-center gap-1 text-xs text-black font-bold"><span className="w-2 h-2 rounded-sm bg-red-400" />Ferroso</span>
-            <span className="flex items-center gap-1 text-xs text-black font-bold"><span className="w-2 h-2 rounded-sm bg-amber-400" />Não ferroso</span>
-          </div>
-        </div>
-
-        <div className="col-span-2 border border-gray-100 rounded-xl p-4">
-          <p className="text-xs font-bold text-black uppercase tracking-wide mb-3">Alertas do sistema</p>
-          <div className="flex flex-col gap-2">
-            {alertas.map((a, i) => (
-              <div key={i} className={`flex gap-2 px-3 py-2 rounded-lg text-xs
-                ${a.type === "danger" ? "bg-red-50" : a.type === "warn" ? "bg-amber-50" : "bg-emerald-50"}`}>
-                <span className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0
-                  ${a.type === "danger" ? "bg-red-400" : a.type === "warn" ? "bg-amber-400" : "bg-emerald-400"}`} />
-                <div>
-                  <p className="text-gray-700">{a.msg}</p>
-                  <p className="text-black font-bold mt-0.5">{a.time}</p>
+              : <div className="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Linha parada
                 </div>
-              </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
 
-      {/* Equipamentos */}
-      <div className="border border-gray-100 rounded-xl p-4 mb-4">
-        <p className="text-xs font-bold text-black uppercase tracking-wide mb-3">Equipamentos industriais</p>
-        <div className="grid grid-cols-3 gap-2">
-          {equipamentos.map(eq => (
-            <EquipamentoCard key={eq.id} equipamento={eq} onToggle={toggleEquipamento} />
+      <div className="max-w-6xl mx-auto px-8 py-6 space-y-5">
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-5 gap-3">
+          {[
+            { label: "Produção hoje", value: stats.totalProduced.toLocaleString("pt-BR"), sub: "unidades aprovadas", accent: "#16c784", textColor: "text-emerald-600" },
+            { label: "Rejeições", value: stats.totalRejected, sub: "produtos rejeitados", accent: "#ef4444", textColor: "text-red-600" },
+            { label: "Taxa de rejeição", value: `${stats.rejectionRate}%`, sub: "limite ANVISA: 0%", accent: "#f59e0b", textColor: "text-amber-600" },
+            { label: "Contaminados passaram", value: stats.contaminadosPassaram, sub: "risco à saúde", accent: stats.contaminadosPassaram > 0 ? "#ef4444" : "#e5e7eb", textColor: stats.contaminadosPassaram > 0 ? "text-red-600" : "text-gray-400" },
+            { label: "Última rejeição", value: stats.lastEvent?.timestamp ?? "--", sub: `${stats.lastEvent?.metal_type === "ferroso" ? "Ferroso" : "Não ferroso"} · ${stats.lastEvent?.size_mm}mm`, accent: "#e5e7eb", textColor: "text-gray-800" },
+          ].map((card, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: card.accent }} />
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">{card.label}</p>
+              <p className={`text-[26px] font-semibold tracking-tight leading-none ${card.textColor}`}>{card.value}</p>
+              <p className="text-[11px] text-gray-400 mt-2">{card.sub}</p>
+            </div>
           ))}
         </div>
-      </div>
 
-      {/* Tabela rejeições */}
-      <div className="border border-gray-100 rounded-xl p-4 mt-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <p className="text-xs font-bold text-black uppercase tracking-wide">Todas as rejeições registradas</p>
-          <div className="flex gap-2 text-xs">
-            <div className="rounded-md bg-gray-100 px-2 py-1">Total: <span className="font-semibold">{events.length}</span></div>
-            <div className="rounded-md bg-red-50 px-2 py-1">Ferroso: <span className="font-semibold text-red-600">{events.filter(e => e.metal_type === "ferroso").length}</span></div>
-            <div className="rounded-md bg-amber-50 px-2 py-1">Não ferroso: <span className="font-semibold text-amber-700">{events.filter(e => e.metal_type === "nao_ferroso").length}</span></div>
+        {/* Charts row */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-800">Produção x Rejeições</h2>
+                <p className="text-xs text-gray-400 mt-0.5">{showFull ? "Visão completa 24h" : "Últimas 8 horas"}</p>
+              </div>
+              <button onClick={() => setShowFull(f => !f)}
+                className="text-[11px] font-medium px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors">
+                {showFull ? "Resumir" : "Ver 24h"}
+              </button>
+            </div>
+            <ResponsiveContainer width="100%" height={210}>
+              <BarChart data={hourlyDisplay} barGap={3} barCategoryGap="35%">
+                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "#fca5a5" }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #f0f0f0", boxShadow: "0 8px 24px rgba(0,0,0,0.08)", padding: "8px 12px" }}
+                  cursor={{ fill: "rgba(0,0,0,0.02)" }}
+                />
+                <Bar yAxisId="left" dataKey="produced" fill="#16c784" radius={[5,5,0,0]} name="Produção" />
+                <Bar yAxisId="right" dataKey="rejected" fill="#ef4444" radius={[5,5,0,0]} name="Rejeições" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex gap-4 mt-3 justify-end">
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-sm bg-[#16c784]" />Produção</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-sm bg-red-400" />Rejeições</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-sm font-semibold text-gray-800 mb-1">Últimas rejeições</h2>
+            <p className="text-xs text-gray-400 mb-4">Eventos mais recentes</p>
+            <RejectionList events={events} />
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-xs text-gray-600 border border-gray-200 rounded-lg overflow-hidden">
-            <thead className="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-2 py-2 border-b border-gray-200">Hora</th>
-                <th className="px-2 py-2 border-b border-gray-200">Tipo</th>
-                <th className="px-2 py-2 border-b border-gray-200">Tamanho</th>
-                <th className="px-2 py-2 border-b border-gray-200">Turno</th>
-                <th className="px-2 py-2 border-b border-gray-200">Lote</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event, i) => (
-                <tr key={event.id ?? i} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-2 py-2">{event.timestamp}</td>
-                  <td className="px-2 py-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${event.metal_type === "ferroso" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
-                      {event.metal_type === "ferroso" ? "Ferroso" : "Não ferroso"}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2">{event.size_mm?.toFixed(1)}mm</td>
-                  <td className="px-2 py-2">{event.shift === "manha" ? "Manhã" : event.shift === "tarde" ? "Tarde" : "Noite"}</td>
-                  <td className="px-2 py-2">{event.lot}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      {/* Footer */}
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-        <p className="text-xs text-gray-300">Sistema ANVISA-ready · Grand Prix SENAI 2024</p>
-        <button onClick={simular} disabled={simulating || paused}
-          className="text-xs px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors">
-          {simulating ? "Simulando..." : "Simular detecção"}
-        </button>
+        {/* Third row */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-sm font-semibold text-gray-800 mb-4">Distribuição</h2>
+
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Por turno</p>
+            {Object.entries(stats.shifts).map(([shift, count]) => {
+              const max = Math.max(...Object.values(stats.shifts), 1)
+              const pct = (count / max) * 100
+              const cfg: Record<string, { color: string; label: string }> = {
+                manha: { color: "bg-emerald-400", label: "Manhã" },
+                tarde: { color: "bg-amber-400", label: "Tarde" },
+                noite: { color: "bg-blue-400", label: "Noite" },
+              }
+              return (
+                <div key={shift} className="mb-3">
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-[12px] text-gray-500">{cfg[shift].label}</span>
+                    <span className="text-[12px] font-semibold text-gray-700">{count}</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${cfg[shift].color} transition-all duration-700`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className="border-t border-gray-100 mt-4 pt-4">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Tipo de metal</p>
+              <div className="flex items-center gap-4">
+                <PieChart width={90} height={90}>
+                  <Pie data={pieData} cx={45} cy={45} innerRadius={24} outerRadius={38} dataKey="value" strokeWidth={0}
+                    onMouseEnter={(_, i) => setActiveMetalIndex(i)}
+                    onMouseLeave={() => setActiveMetalIndex(null)}>
+                    <Cell fill={activeMetalIndex === 0 ? "#dc2626" : "#ef4444"} />
+                    <Cell fill={activeMetalIndex === 1 ? "#d97706" : "#f59e0b"} />
+                  </Pie>
+                </PieChart>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-red-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-[11px] text-gray-500">Ferroso</p>
+                      <p className="text-sm font-semibold text-gray-800">{stats.ferroso}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-[11px] text-gray-500">Não ferroso</p>
+                      <p className="text-sm font-semibold text-gray-800">{stats.naoFerroso}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-sm font-semibold text-gray-800 mb-1">Alertas do sistema</h2>
+            <p className="text-xs text-gray-400 mb-4">Gerados automaticamente com base nos eventos</p>
+            <div className="flex flex-col gap-2">
+              {alertas.map((a, i) => (
+                <div key={i} className={`flex gap-3 px-4 py-3 rounded-xl text-xs
+                  ${a.type === "danger" ? "bg-red-50 border border-red-100" : a.type === "warn" ? "bg-amber-50 border border-amber-100" : "bg-emerald-50 border border-emerald-100"}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full mt-0.5 flex-shrink-0 ${a.type === "danger" ? "bg-red-500" : a.type === "warn" ? "bg-amber-500" : "bg-emerald-500"}`} />
+                  <div>
+                    <p className={`font-medium ${a.type === "danger" ? "text-red-800" : a.type === "warn" ? "text-amber-800" : "text-emerald-800"}`}>{a.msg}</p>
+                    <p className="text-gray-400 mt-0.5">{a.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Equipamentos */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-800">Equipamentos industriais</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Status em tempo real</p>
+            </div>
+            {hayFalha && <span className="text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-1 rounded-full font-medium">{equipamentos.filter(e => e.status === "falha").length} em falha</span>}
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {equipamentos.map(eq => <EquipamentoCard key={eq.id} equipamento={eq} onToggle={toggleEquipamento} />)}
+          </div>
+        </div>
+
+        {/* Tabela */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-800">Todas as rejeições</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Registro completo do dia atual</p>
+            </div>
+            <div className="flex gap-2 text-[11px]">
+              <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg font-medium">Total: {events.length}</span>
+              <span className="px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 rounded-lg font-medium">Fe: {events.filter(e => e.metal_type === "ferroso").length}</span>
+              <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-lg font-medium">NF: {events.filter(e => e.metal_type === "nao_ferroso").length}</span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  {["Hora", "Tipo", "Tamanho", "Turno", "Lote"].map(h => (
+                    <th key={h} className="text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest pb-3 px-3">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event, i) => (
+                  <tr key={event.id ?? i} className="border-b border-gray-50 hover:bg-gray-50 transition-colors group">
+                    <td className="px-3 py-3 font-semibold text-gray-700 font-mono">{event.timestamp}</td>
+                    <td className="px-3 py-3">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold
+                        ${event.metal_type === "ferroso" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                        {event.metal_type === "ferroso" ? "Ferroso" : "Não ferroso"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-gray-500 font-mono">{event.size_mm?.toFixed(1)}mm</td>
+                    <td className="px-3 py-3 text-gray-500">{event.shift === "manha" ? "Manhã" : event.shift === "tarde" ? "Tarde" : "Noite"}</td>
+                    <td className="px-3 py-3 text-gray-400 font-mono">{event.lot}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center pt-2">
+          <p className="text-[11px] text-gray-300">Sistema ANVISA-ready · Grand Prix SENAI 2025</p>
+          <button onClick={simular} disabled={simulating || paused}
+            className="text-xs font-medium px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-40 transition-all shadow-sm">
+            {simulating ? "Simulando..." : "Simular detecção"}
+          </button>
+        </div>
       </div>
     </div>
   )

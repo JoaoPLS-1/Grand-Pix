@@ -4,9 +4,11 @@ import Navbar from "../pages/components/NavBar"
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <>
+    <div className="flex min-h-screen">
       <Navbar />
-      <Component {...pageProps} />
-    </>
+      <main style={{ marginLeft: 220 }} className="flex-1 min-h-screen bg-[#f5f6fa]">
+        <Component {...pageProps} />
+      </main>
+    </div>
   )
 }
