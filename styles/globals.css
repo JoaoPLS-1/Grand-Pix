@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #f5f6fa;
@@ -24,15 +26,21 @@ h1, h2, h3, h4 {
   color: #0a0a0a;
 }
 
-/* Textos pequenos nunca abaixo de 12px */
+p, span, td, th, label, button, a, li, div {
+  font-weight: 450;
+}
+
 .text-xs { font-size: 12px !important; }
 .text-\[10px\] { font-size: 11px !important; }
 .text-\[11px\] { font-size: 12px !important; }
 .text-\[9px\] { font-size: 11px !important; }
 
-/* Cinzas substituídos por tons mais escuros e legíveis */
 .text-gray-400 { color: #374151 !important; }
 .text-gray-300 { color: #4b5563 !important; }
 .text-gray-500 { color: #1f2937 !important; }
 .text-gray-600 { color: #111827 !important; }
 .text-gray-700 { color: #0a0a0a !important; }
+
+.font-medium { font-weight: 600 !important; }
+.font-normal { font-weight: 450 !important; }
+.font-semibold { font-weight: 700 !important; }
