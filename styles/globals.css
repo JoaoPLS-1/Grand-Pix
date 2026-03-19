@@ -2,7 +2,7 @@
 
 :root {
   --background: #f5f6fa;
-  --foreground: #0f1117;
+  --foreground: #0a0a0a;
 }
 
 body {
@@ -10,4 +10,29 @@ body {
   color: var(--foreground);
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 15px;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  line-height: 1.6;
 }
+
+h1, h2, h3, h4 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: #0a0a0a;
+}
+
+/* Textos pequenos nunca abaixo de 12px */
+.text-xs { font-size: 12px !important; }
+.text-\[10px\] { font-size: 11px !important; }
+.text-\[11px\] { font-size: 12px !important; }
+.text-\[9px\] { font-size: 11px !important; }
+
+/* Cinzas substituídos por tons mais escuros e legíveis */
+.text-gray-400 { color: #374151 !important; }
+.text-gray-300 { color: #4b5563 !important; }
+.text-gray-500 { color: #1f2937 !important; }
+.text-gray-600 { color: #111827 !important; }
+.text-gray-700 { color: #0a0a0a !important; }
